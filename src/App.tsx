@@ -5,7 +5,7 @@ import {
   IonModal, IonPage, IonSegment, IonSegmentButton, IonTitle, IonToast, IonToggle, IonToolbar,
   setupIonicReact,
 } from '@ionic/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -81,6 +81,38 @@ const App: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void; danger?: boolean }>({ show: false, title: '', message: '', onConfirm: () => {} });
+
+  const addNameInputRef = useRef<any>(null);
+  const debtAmountInputRef = useRef<any>(null);
+  const paymentAmountInputRef = useRef<any>(null);
+  const editNameInputRef = useRef<any>(null);
+  const pinInputRef = useRef<any>(null);
+
+  const focusInput = (inputRef: React.MutableRefObject<any>) => {
+    requestAnimationFrame(() => {
+      inputRef.current?.setFocus?.();
+    });
+  };
+
+  useEffect(() => {
+    if (showAdd) focusInput(addNameInputRef);
+  }, [showAdd]);
+
+  useEffect(() => {
+    if (showDebt) focusInput(debtAmountInputRef);
+  }, [showDebt]);
+
+  useEffect(() => {
+    if (showPayment) focusInput(paymentAmountInputRef);
+  }, [showPayment]);
+
+  useEffect(() => {
+    if (showEdit) focusInput(editNameInputRef);
+  }, [showEdit]);
+
+  useEffect(() => {
+    if (showPin) focusInput(pinInputRef);
+  }, [showPin]);
 
   useEffect(() => {
     const initDB = async () => {
@@ -162,6 +194,13 @@ const App: React.FC = () => {
   };
 
   const selectedDetail = selectedCustomer ? customers.find(c => c.id === selectedCustomer.id) ?? selectedCustomer : null;
+
+  const filteredCustomers = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    return normalizedSearch
+      ? customers.filter(c => `${c.name} ${c.phone}`.toLowerCase().includes(normalizedSearch))
+      : customers;
+  }, [customers, searchTerm]);
   const openDebtModal = () => { if (!selectedDetail) return; setDebtAmount(''); setDebtNote(''); setShowDebt(true); };
 
   const addDebt = () => {
@@ -300,13 +339,28 @@ const App: React.FC = () => {
     );
   };
 
-  const CustomersView = ({ customers, formatRupiah, searchTerm, onSearch, onAdd, onSelect, onPay }: {
+  const CustomersView = useCallback(({ customers, formatRupiah, searchTerm, onSearch, onAdd, onSelect, onPay }: {
     customers: Customer[]; formatRupiah: (n: number) => string; searchTerm: string;
     onSearch: (s: string) => void; onAdd: () => void; onSelect: (c: Customer) => void; onPay: (id: number) => void;
   }) => (
     <div className="inner-page">
       <div className="page-heading compact"><div><p className="eyebrow">DATA PELANGGAN</p><h1>Pelanggan</h1></div></div>
-      <div className="search-field"><IonIcon icon={searchOutline} /><IonInput value={searchTerm} onIonInput={(e) => onSearch(e.detail.value ?? '')} placeholder="Cari nama / nomor" /></div>
+      <div className="search-field">
+        <IonIcon icon={searchOutline} />
+        <input
+          type="text"
+          inputMode="text"
+          className="native-search-input"
+          value={searchTerm}
+          onChange={(e) => onSearch(e.target.value)}
+          placeholder="Cari nama / nomor"
+          autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label="Cari pelanggan"
+        />
+      </div>
       <p className="list-count">{customers.length} pelanggan terdaftar</p>
       {customers.length === 0 ? (
         <p className="ion-text-center ion-padding text-muted">Belum ada pelanggan</p>
@@ -319,7 +373,7 @@ const App: React.FC = () => {
         <IonFabButton className="reference-fab compact-fab" onClick={onAdd}><IonIcon icon={addOutline} /><span>Tambah</span></IonFabButton>
       </IonFab>
     </div>
-  );
+  ), []);
 
   const CustomerRow = ({ customer, formatRupiah, onPay, onSelect, showAmountLabel = true, showPaymentAction = true }: {
     customer: Customer; formatRupiah: (n: number) => string; onPay: (id: number) => void;
@@ -520,7 +574,7 @@ const App: React.FC = () => {
                 />
               )}
               {activeTab === 'customers' && !selectedCustomer && (
-                <CustomersView customers={customers.filter(c => `${c.name} ${c.phone}`.toLowerCase().includes(searchTerm.toLowerCase()))}
+                <CustomersView customers={filteredCustomers}
                   {...{ formatRupiah, searchTerm }}
                   onSearch={setSearchTerm}
                   onAdd={() => openOwnerAction(() => setShowAdd(true))}
@@ -567,10 +621,10 @@ const App: React.FC = () => {
         <IonHeader><IonToolbar><IonTitle>Pelanggan Baru</IonTitle><IonButtons slot="end"><IonButton onClick={() => setShowAdd(false)}>Tutup</IonButton></IonButtons></IonToolbar></IonHeader>
         <IonContent className="ion-padding">
           <IonList lines="none">
-            <IonItem><IonLabel position="stacked">Nama Pelanggan</IonLabel><IonInput placeholder="Ex: John Doe" value={newName} onIonInput={(e) => setNewName(e.detail.value ?? '')} /></IonItem>
-            <IonItem><IonLabel position="stacked">Nomor WhatsApp</IonLabel><IonInput placeholder="Ex: 08xxxxxxxxx" value={newPhone} onIonInput={(e) => setNewPhone(e.detail.value ?? '')} /></IonItem>
-            <IonItem><IonLabel position="stacked">Jumlah Hutang</IonLabel><IonInput placeholder="Ex: 25000" value={newAmount} onIonInput={(e) => setNewAmount(formatRupiahInput(e.detail.value ?? ''))} inputMode="numeric" /></IonItem>
-            <IonItem><IonLabel position="stacked">Keterangan</IonLabel><IonInput placeholder="Ex: Mie Ayam" value={newNote} onIonInput={(e) => setNewNote(e.detail.value ?? '')} /></IonItem>
+            <IonItem><IonLabel position="stacked">Nama Pelanggan</IonLabel><input ref={addNameInputRef} className="native-input-field modal-input" placeholder="Ex: John Doe" value={newName} onChange={(e) => setNewName(e.target.value)} /></IonItem>
+            <IonItem><IonLabel position="stacked">Nomor WhatsApp</IonLabel><input className="native-input-field modal-input" placeholder="Ex: 08xxxxxxxxx" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} /></IonItem>
+            <IonItem><IonLabel position="stacked">Jumlah Hutang</IonLabel><input className="native-input-field modal-input" placeholder="Ex: 25000" value={newAmount} onChange={(e) => setNewAmount(formatRupiahInput(e.target.value))} inputMode="numeric" /></IonItem>
+            <IonItem><IonLabel position="stacked">Keterangan</IonLabel><input className="native-input-field modal-input" placeholder="Ex: Mie Ayam" value={newNote} onChange={(e) => setNewNote(e.target.value)} /></IonItem>
           </IonList>
           <IonButton expand="block" onClick={addCustomer}>Simpan Pelanggan</IonButton>
         </IonContent>
@@ -580,8 +634,8 @@ const App: React.FC = () => {
         <IonHeader><IonToolbar><IonTitle>Tambah Hutang</IonTitle><IonButtons slot="end"><IonButton onClick={() => setShowDebt(false)}>Tutup</IonButton></IonButtons></IonToolbar></IonHeader>
         <IonContent className="ion-padding">
           <IonList lines="none">
-            <IonItem><IonLabel position="stacked">Nominal</IonLabel><IonInput placeholder="Ex: 25000" value={debtAmount} onIonInput={(e) => setDebtAmount(formatRupiahInput(e.detail.value ?? ''))} inputMode="numeric" /></IonItem>
-            <IonItem><IonLabel position="stacked">Keterangan</IonLabel><IonInput placeholder="Ex: Seblak" value={debtNote} onIonInput={(e) => setDebtNote(e.detail.value ?? '')} /></IonItem>
+            <IonItem><IonLabel position="stacked">Nominal</IonLabel><input ref={debtAmountInputRef} className="native-input-field modal-input" placeholder="Ex: 25000" value={debtAmount} onChange={(e) => setDebtAmount(formatRupiahInput(e.target.value))} inputMode="numeric" /></IonItem>
+            <IonItem><IonLabel position="stacked">Keterangan</IonLabel><input className="native-input-field modal-input" placeholder="Ex: Seblak" value={debtNote} onChange={(e) => setDebtNote(e.target.value)} /></IonItem>
           </IonList>
           <IonButton expand="block" onClick={addDebt}>Simpan Hutang</IonButton>
         </IonContent>
@@ -591,8 +645,8 @@ const App: React.FC = () => {
         <IonHeader><IonToolbar><IonTitle>Catat Pembayaran</IonTitle><IonButtons slot="end"><IonButton onClick={() => setShowPayment(false)}>Tutup</IonButton></IonButtons></IonToolbar></IonHeader>
         <IonContent className="ion-padding">
           <IonList lines="none">
-            <IonItem><IonLabel position="stacked">Nominal Dibayar</IonLabel><IonInput placeholder="Ex: 100000" value={paymentAmount} onIonInput={(e) => setPaymentAmount(formatRupiahInput(e.detail.value ?? ''))} inputMode="numeric" /></IonItem>
-            <IonItem><IonLabel position="stacked">Keterangan</IonLabel><IonInput placeholder="Ex: Bayar Mie Ayam" value={paymentNote} onIonInput={(e) => setPaymentNote(e.detail.value ?? '')} /></IonItem>
+            <IonItem><IonLabel position="stacked">Nominal Dibayar</IonLabel><input ref={paymentAmountInputRef} className="native-input-field modal-input" placeholder="Ex: 100000" value={paymentAmount} onChange={(e) => setPaymentAmount(formatRupiahInput(e.target.value))} inputMode="numeric" /></IonItem>
+            <IonItem><IonLabel position="stacked">Keterangan</IonLabel><input className="native-input-field modal-input" placeholder="Ex: Bayar Mie Ayam" value={paymentNote} onChange={(e) => setPaymentNote(e.target.value)} /></IonItem>
           </IonList>
           <IonButton expand="block" onClick={addPayment}>Simpan Pembayaran</IonButton>
         </IonContent>
@@ -602,9 +656,9 @@ const App: React.FC = () => {
         <IonHeader><IonToolbar><IonTitle>Edit Pelanggan</IonTitle><IonButtons slot="end"><IonButton onClick={() => setShowEdit(false)}>Tutup</IonButton></IonButtons></IonToolbar></IonHeader>
         <IonContent className="ion-padding">
           <IonList lines="none">
-            <IonItem><IonLabel position="stacked">Nama</IonLabel><IonInput placeholder="Ex: John Doe" value={editName} onIonInput={(e) => setEditName(e.detail.value ?? '')} /></IonItem>
-            <IonItem><IonLabel position="stacked">Nomor WhatsApp</IonLabel><IonInput placeholder="Ex: 08xxxxxxxxx" value={editPhone} onIonInput={(e) => setEditPhone(e.detail.value ?? '')} /></IonItem>
-            <IonItem><IonLabel position="stacked">Sisa Hutang</IonLabel><IonInput placeholder="Ex: 25000" value={editDebtAmount} onIonInput={(e) => setEditDebtAmount(formatRupiahInput(e.detail.value ?? ''))} inputMode="numeric" /></IonItem>
+            <IonItem><IonLabel position="stacked">Nama</IonLabel><input ref={editNameInputRef} className="native-input-field modal-input" placeholder="Ex: John Doe" value={editName} onChange={(e) => setEditName(e.target.value)} /></IonItem>
+            <IonItem><IonLabel position="stacked">Nomor WhatsApp</IonLabel><input className="native-input-field modal-input" placeholder="Ex: 08xxxxxxxxx" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} /></IonItem>
+            <IonItem><IonLabel position="stacked">Sisa Hutang</IonLabel><input className="native-input-field modal-input" placeholder="Ex: 25000" value={editDebtAmount} onChange={(e) => setEditDebtAmount(formatRupiahInput(e.target.value))} inputMode="numeric" /></IonItem>
           </IonList>
           <IonButton expand="block" onClick={saveEdit}>Simpan Perubahan</IonButton>
           <IonButton expand="block" fill="clear" color="danger" onClick={() => selectedDetail && openOwnerAction(() => deleteCustomer(selectedDetail.id))}>Hapus Pelanggan</IonButton>
@@ -615,7 +669,7 @@ const App: React.FC = () => {
         <IonContent className="ion-padding ion-text-center">
           <IonIcon icon={lockClosedOutline} size="large" style={{ fontSize: '3rem', margin: '1rem 0' }} />
           <h2>Masukkan PIN</h2>
-          <IonInput type="password" inputMode="numeric" maxlength={4} value={pin} onIonInput={(e) => setPin(e.detail.value ?? '')} placeholder="••••" style={{ maxWidth: 200, margin: '0 auto' }} />
+          <input ref={pinInputRef} className="native-input-field native-pin-input" type="password" inputMode="numeric" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value)} placeholder="••••" />
           <IonButton expand="block" style={{ marginTop: '1rem' }} onClick={verifyPin}>Buka Akses</IonButton>
         </IonContent>
       </IonModal>

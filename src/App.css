@@ -70,7 +70,14 @@ ion-toolbar { --background: var(--paper); --color: var(--ink); }
 .tab ion-icon { font-size: 21px; } .tab.active { color: var(--green); font-weight: 800; }
 .inner-page { padding-top: 1px; } .small-add { --background: var(--green); --color: white; --border-radius: 8px; font-size: 11px; font-weight: 700; height: 34px; margin: 0; text-transform: none; }
 .small-add ion-icon { font-size: 15px; margin-right: 4px; }
-.search-field { display: flex; gap: 9px; align-items: center; padding: 12px 14px; background: var(--surface-soft); border-radius: 10px; color: var(--muted); font-size: 12px; } .search-field ion-icon { font-size: 17px; }
+.search-field { display: flex; align-items: center; gap: 9px; width: 100%; padding: 12px 14px; background: var(--surface-soft); border-radius: 10px; border: 1px solid #e9e1d3; color: var(--muted); overflow: hidden; }
+.search-field ion-icon { flex: 0 0 auto; font-size: 17px; }
+.native-search-input { flex: 1 1 auto; width: 100%; min-width: 0; display: block; border: 0; background: transparent; color: var(--ink); font-size: 14px; font-family: inherit; line-height: 1.2; outline: none; text-rendering: optimizeLegibility; caret-color: var(--ink); }
+.native-search-input::placeholder { color: var(--muted); }
+.native-search-input:focus { outline: none; }
+.native-input-field { width: 100%; min-height: 44px; padding: 10px 12px; background: #fffdf6; border: 1px solid #e9e1d3; border-radius: 10px; color: var(--ink); font-size: 14px; font-family: inherit; outline: none; }
+.modal-input { min-height: 46px; margin-top: 6px; }
+.native-pin-input { display: block; max-width: 200px; margin: 25px auto 14px; text-align: center; letter-spacing: 7px; font-size: 24px; }
 .list-count { color: var(--muted); font-size: 11px; margin: 20px 2px 5px; } .full-list .customer-row { padding: 14px 3px; }
 .report-icon { color: var(--green); font-size: 29px; } .report-segment { --background: #efede9; border-radius: 8px; margin-bottom: 17px; } .report-segment ion-segment-button { --indicator-color: white; --color-checked: var(--green); font-size: 11px; min-height: 33px; }
 .report-card { --background: #f1ece2; color: var(--ink); box-shadow: none; margin-bottom: 15px; } .report-card ion-card-content { padding: 18px; } .report-card h2 { margin: 4px 0 18px; font-size: 24px; }
