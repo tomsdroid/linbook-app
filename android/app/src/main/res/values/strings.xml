@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MbakLin</string>
+    <string name="title_activity_main">MbakLin</string>
+    <string name="package_name">com.mbaklin.app</string>
+    <string name="custom_url_scheme">com.mbaklin.app</string>
+</resources>
