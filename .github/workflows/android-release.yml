@@ -36,14 +36,14 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/linbook.keystore
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/linbook.keystore
 
       - name: Setup Gradle Properties
         run: |
           cat > android/gradle.properties << 'EOF'
           android.useAndroidX=true
           android.enableJetifier=true
-          storeFile=app/linbook.keystore
+          storeFile=linbook.keystore
           storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
           keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
