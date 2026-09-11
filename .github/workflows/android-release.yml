@@ -42,10 +42,10 @@ jobs:
 
       - name: Setup Gradle Properties
         run: |
-          echo "storeFile=linbook.keystore" >> android/app/gradle.properties
-          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/app/gradle.properties
-          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/app/gradle.properties
-          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/app/gradle.properties
+          echo "storeFile=app/linbook.keystore" >> android/gradle.properties
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/gradle.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/gradle.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/gradle.properties
 
       - name: Install dependencies
         run: npm ci
