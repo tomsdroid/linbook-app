@@ -21,8 +21,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,13 +37,17 @@ jobs:
       - name: Decode Keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/linbook.keystore
+          ls -la android/app/linbook.keystore
 
       - name: Setup Gradle Properties
         run: |
-          echo "storeFile=linbook.keystore" >> android/app/gradle.properties
-          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/app/gradle.properties
-          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/app/gradle.properties
-          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/app/gradle.properties
+          cat > android/gradle.properties << 'EOF'
+          storeFile=app/linbook.keystore
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+          cat android/gradle.properties
 
       - name: Install dependencies
         run: npm ci
