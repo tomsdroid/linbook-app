@@ -43,6 +43,26 @@ jobs:
       - name: Sync Capacitor Android
         run: npx cap sync android
 
+      - name: Prepare Android signing config
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ] && [ -n "$ANDROID_KEY_PASSWORD" ]; then
+            mkdir -p android
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/linbook-release.jks
+            cat <<EOF > android/keystore.properties
+          storeFile=linbook-release.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+          else
+            echo "Repository secrets for Android signing are not configured. The workflow will build an unsigned release APK."
+          fi
+
       - name: Build Android APKs
         working-directory: android
         run: |
@@ -52,15 +72,18 @@ jobs:
       - name: Prepare APK files
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk LinBook-${{ github.ref_name }}-debug.apk
-          cp android/app/build/outputs/apk/release/app-release-unsigned.apk LinBook-${{ github.ref_name }}-release-unsigned.apk
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk LinBook-${{ github.ref_name }}-release.apk
+          else
+            cp android/app/build/outputs/apk/release/app-release-unsigned.apk LinBook-${{ github.ref_name }}-release-unsigned.apk
+          fi
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: LinBook-android-${{ github.sha }}
           path: |
-            LinBook-${{ github.ref_name }}-debug.apk
-            LinBook-${{ github.ref_name }}-release-unsigned.apk
+            LinBook-${{ github.ref_name }}-*.apk
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -69,5 +92,4 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            LinBook-${{ github.ref_name }}-debug.apk
-            LinBook-${{ github.ref_name }}-release-unsigned.apk
+            LinBook-${{ github.ref_name }}-*.apk

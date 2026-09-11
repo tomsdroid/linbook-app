@@ -31,3 +31,5 @@ yarn-error.log*
 .eslintcache
 linbook.keystore
 key.txt
+android/keystore.properties
+*.jks

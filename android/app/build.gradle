@@ -1,9 +1,19 @@
 apply plugin: 'com.android.application'
 
-def keystorePropertiesFile = rootProject.file("gradle.properties")
+def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
+def hasSigningConfig = false
+
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    hasSigningConfig = keystoreProperties['storeFile'] &&
+            keystoreProperties['storePassword'] &&
+            keystoreProperties['keyAlias'] &&
+            keystoreProperties['keyPassword']
+}
+
+if (!hasSigningConfig) {
+    logger.lifecycle("Android release signing is not configured. Build will produce an unsigned release APK unless android/keystore.properties is provided.")
 }
 
 android {
@@ -23,7 +33,7 @@ android {
 
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists()) {
+            if (hasSigningConfig) {
                 storeFile file(keystoreProperties['storeFile'])
                 storePassword keystoreProperties['storePassword']
                 keyAlias keystoreProperties['keyAlias']
@@ -34,7 +44,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (hasSigningConfig) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
