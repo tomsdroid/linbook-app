@@ -20,7 +20,8 @@ import {
   ChartData,
   ChartOptions,
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+// ✅ DIUBAH: ganti Bar → Chart
+import { Chart } from 'react-chartjs-2';
 import { addOutline, barChartOutline, checkmarkCircle, chevronForwardOutline, homeOutline, lockClosedOutline, menuOutline, moonOutline, peopleOutline, personCircleOutline, searchOutline, shieldCheckmarkOutline, sparklesOutline, sunnyOutline, walletOutline } from 'ionicons/icons';
 
 import {
@@ -441,7 +442,8 @@ const App: React.FC = () => {
         </div>
         <IonCard className="report-card">
           <IonCardContent>
-            <Bar data={chartData} options={chartOptions} height={260} />
+            {/* ✅ DIUBAH: Bar → Chart + type="bar" */}
+            <Chart type="bar" data={chartData} options={chartOptions} height={260} />
           </IonCardContent>
         </IonCard>
         <div className="section-heading report-list-heading"><h3>Daftar Piutang</h3><button onClick={onCustomers}>Lihat semua</button></div>
