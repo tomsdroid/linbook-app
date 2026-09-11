@@ -17,6 +17,8 @@ import {
   Tooltip,
   Legend,
   ArcElement,
+  ChartData,
+  ChartOptions,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { addOutline, barChartOutline, checkmarkCircle, chevronForwardOutline, homeOutline, lockClosedOutline, menuOutline, moonOutline, peopleOutline, personCircleOutline, searchOutline, shieldCheckmarkOutline, sparklesOutline, sunnyOutline, walletOutline } from 'ionicons/icons';
@@ -380,12 +382,13 @@ const App: React.FC = () => {
     const months12 = [...months6, 'Jul','Agu','Sep','Okt','Nov','Des'];
     const labels = period === '6' ? months6 : months12;
     
-    const chartData = useMemo(() => {
+    const chartData: ChartData<'bar' | 'line', number[], string> = useMemo(() => {
       const baseVal = totalDebt / labels.length;
       return {
         labels,
         datasets: [
           {
+            type: 'bar' as const,
             label: 'Total Piutang (Rp)',
             data: labels.map((_, i) => Math.round(baseVal * (0.3 + (i * 0.12) + Math.random() * 0.2))),
             backgroundColor: 'rgba(25, 118, 210, 0.6)',
@@ -394,9 +397,9 @@ const App: React.FC = () => {
             borderRadius: 6,
           },
           {
+            type: 'line' as const,
             label: 'Jumlah Pelanggan',
             data: labels.map((_, i) => Math.round(customers.length * (0.4 + (i * 0.08) + Math.random() * 0.15))),
-            type: 'line' as const,
             borderColor: 'rgba(255, 159, 64, 1)',
             backgroundColor: 'rgba(255, 159, 64, 0.2)',
             borderWidth: 3,
@@ -408,12 +411,12 @@ const App: React.FC = () => {
       };
     }, [period, totalDebt, customers.length]);
 
-    const chartOptions = {
+    const chartOptions: ChartOptions<'bar' | 'line'> = {
       responsive: true,
       maintainAspectRatio: true,
       scales: {
         y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y1: { position: 'right', beginAtZero: true, grid: { display: false } },
+        y1: { position: 'right' as const, beginAtZero: true, grid: { display: false } },
         x: { grid: { display: false } }
       },
       plugins: { legend: { position: 'top' as const, labels: { usePointStyle: true, padding: 16 } } }
