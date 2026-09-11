@@ -2,6 +2,7 @@ name: Android Release
 
 on:
   push:
+    branches: [main]
     tags:
       - 'v*'
   workflow_dispatch:
@@ -11,7 +12,6 @@ permissions:
 
 env:
   JAVA_VERSION: '21'
-  NODE_VERSION: '22'
 
 jobs:
   android:
@@ -25,29 +25,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: 22
           cache: npm
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-
-      - name: Decode Keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/linbook.keystore
-
-      - name: Setup Gradle Properties
-        run: |
-          cat > android/gradle.properties << 'EOF'
-          android.useAndroidX=true
-          android.enableJetifier=true
-          storeFile=linbook.keystore
-          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
-          EOF
 
       - name: Install dependencies
         run: npm ci
@@ -58,21 +43,24 @@ jobs:
       - name: Sync Capacitor Android
         run: npx cap sync android
 
-      - name: Build Android Release APK
+      - name: Build Android APKs
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleDebug assembleRelease --no-daemon --stacktrace
 
-      - name: Prepare APK file
+      - name: Prepare APK files
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk LinBook-${{ github.ref_name }}-release.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk LinBook-${{ github.ref_name }}-debug.apk
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk LinBook-${{ github.ref_name }}-release-unsigned.apk
 
-      - name: Upload APK artifact
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: LinBook-android-${{ github.sha }}
-          path: LinBook-${{ github.ref_name }}-release.apk
+          path: |
+            LinBook-${{ github.ref_name }}-debug.apk
+            LinBook-${{ github.ref_name }}-release-unsigned.apk
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -80,4 +68,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: LinBook-${{ github.ref_name }}-release.apk
+          files: |
+            LinBook-${{ github.ref_name }}-debug.apk
+            LinBook-${{ github.ref_name }}-release-unsigned.apk
