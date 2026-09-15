@@ -20,8 +20,7 @@ import {
   ChartData,
   ChartOptions,
 } from 'chart.js';
-// ✅ DIUBAH: ganti Bar → Chart
-import { Chart } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { addOutline, barChartOutline, checkmarkCircle, chevronForwardOutline, homeOutline, lockClosedOutline, menuOutline, moonOutline, peopleOutline, personCircleOutline, searchOutline, shieldCheckmarkOutline, sparklesOutline, sunnyOutline, walletOutline } from 'ionicons/icons';
 
 import {
@@ -456,13 +455,12 @@ const App: React.FC = () => {
     const months12 = [...months6, 'Jul','Agu','Sep','Okt','Nov','Des'];
     const labels = period === '6' ? months6 : months12;
     
-    const chartData: ChartData<'bar' | 'line', number[], string> = useMemo(() => {
+    const chartData: ChartData<'bar', number[], string> = useMemo(() => {
       const baseVal = totalDebt / labels.length;
       return {
         labels,
         datasets: [
           {
-            type: 'bar' as const,
             label: 'Total Piutang (Rp)',
             data: labels.map((_, i) => Math.round(baseVal * (0.3 + (i * 0.12) + Math.random() * 0.2))),
             backgroundColor: 'rgba(25, 118, 210, 0.6)',
@@ -470,27 +468,15 @@ const App: React.FC = () => {
             borderWidth: 1,
             borderRadius: 6,
           },
-          {
-            type: 'line' as const,
-            label: 'Jumlah Pelanggan',
-            data: labels.map((_, i) => Math.round(customers.length * (0.4 + (i * 0.08) + Math.random() * 0.15))),
-            borderColor: 'rgba(255, 159, 64, 1)',
-            backgroundColor: 'rgba(255, 159, 64, 0.2)',
-            borderWidth: 3,
-            tension: 0.4,
-            fill: true,
-            yAxisID: 'y1',
-          }
         ]
       };
     }, [period, totalDebt, customers.length]);
 
-    const chartOptions: ChartOptions<'bar' | 'line'> = {
+    const chartOptions: ChartOptions<'bar'> = {
       responsive: true,
       maintainAspectRatio: true,
       scales: {
         y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y1: { position: 'right' as const, beginAtZero: true, grid: { display: false } },
         x: { grid: { display: false } }
       },
       plugins: { legend: { position: 'top' as const, labels: { usePointStyle: true, padding: 16 } } }
@@ -515,9 +501,8 @@ const App: React.FC = () => {
         </div>
         <IonCard className="report-card">
           <IonCardContent>
-            {/* ✅ DIUBAH: Bar → Chart + type="bar" */}
             <ChartBoundary>
-              <Chart type="bar" data={chartData} options={chartOptions} height={260} />
+              <Bar data={chartData} options={chartOptions} height={260} />
             </ChartBoundary>
           </IonCardContent>
         </IonCard>
