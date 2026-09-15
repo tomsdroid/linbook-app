@@ -451,18 +451,41 @@ const App: React.FC = () => {
     onCustomers: () => void; onPay: (id: number) => void;
   }) => {
     const [period, setPeriod] = useState('6');
-    const months6 = ['Jan','Feb','Mar','Apr','Mei','Jun'];
-    const months12 = [...months6, 'Jul','Agu','Sep','Okt','Nov','Des'];
-    const labels = period === '6' ? months6 : months12;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const monthCount = period === '6' ? 6 : 12;
     
     const chartData: ChartData<'bar', number[], string> = useMemo(() => {
-      const baseVal = totalDebt / labels.length;
+      const today = new Date();
+      const firstMonth = new Date(today.getFullYear(), today.getMonth() - monthCount + 1, 1);
+      const labels = Array.from({ length: monthCount }, (_, index) => {
+        const month = new Date(firstMonth.getFullYear(), firstMonth.getMonth() + index, 1);
+        return `${monthNames[month.getMonth()]} ${month.getFullYear()}`;
+      });
+
+      const transactions = customers.flatMap(customer => customer.transactions.map(transaction => {
+        const parsedDate = transaction.date.match(/^(\d{1,2})\s+([A-Za-zÀ-ÿ]+)\s+(\d{4})$/);
+        const monthIndex = parsedDate ? monthNames.findIndex(month => month.toLowerCase() === parsedDate[2].slice(0, 3).toLowerCase()) : -1;
+        const transactionDate = parsedDate && monthIndex >= 0
+          ? new Date(Number(parsedDate[3]), monthIndex, Number(parsedDate[1]))
+          : new Date(transaction.id);
+        return { ...transaction, transactionDate };
+      }));
+
+      const data = Array.from({ length: monthCount }, (_, index) => {
+        const month = new Date(firstMonth.getFullYear(), firstMonth.getMonth() + index, 1);
+        const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59, 999);
+        return transactions.reduce((balance, transaction) => {
+          if (transaction.transactionDate > monthEnd) return balance;
+          return balance + (transaction.type === 'debt' ? transaction.amount : -transaction.amount);
+        }, 0);
+      });
+
       return {
         labels,
         datasets: [
           {
-            label: 'Total Piutang (Rp)',
-            data: labels.map((_, i) => Math.round(baseVal * (0.3 + (i * 0.12) + Math.random() * 0.2))),
+            label: 'Saldo Piutang (Rp)',
+            data,
             backgroundColor: 'rgba(25, 118, 210, 0.6)',
             borderColor: 'rgba(25, 118, 210, 1)',
             borderWidth: 1,
@@ -470,7 +493,7 @@ const App: React.FC = () => {
           },
         ]
       };
-    }, [period, totalDebt, customers.length]);
+    }, [customers, monthCount, monthNames]);
 
     const chartOptions: ChartOptions<'bar'> = {
       responsive: true,
