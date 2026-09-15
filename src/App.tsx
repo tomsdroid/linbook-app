@@ -5,7 +5,7 @@ import {
   IonModal, IonPage, IonSegment, IonSegmentButton, IonTitle, IonToast, IonToggle, IonToolbar,
   setupIonicReact,
 } from '@ionic/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -51,6 +51,25 @@ ChartJS.register(
   CategoryScale, LinearScale, BarElement, PointElement,
   LineElement, Title, Tooltip, Legend, ArcElement
 );
+
+class ChartBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('Gagal merender grafik laporan', error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <p className="ion-text-center ion-padding text-muted">Grafik belum tersedia di perangkat ini.</p>;
+    }
+    return this.props.children;
+  }
+}
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -497,7 +516,9 @@ const App: React.FC = () => {
         <IonCard className="report-card">
           <IonCardContent>
             {/* ✅ DIUBAH: Bar → Chart + type="bar" */}
-            <Chart type="bar" data={chartData} options={chartOptions} height={260} />
+            <ChartBoundary>
+              <Chart type="bar" data={chartData} options={chartOptions} height={260} />
+            </ChartBoundary>
           </IonCardContent>
         </IonCard>
         <div className="section-heading report-list-heading"><h3>Daftar Piutang</h3><button onClick={onCustomers}>Lihat semua</button></div>
